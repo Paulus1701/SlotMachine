@@ -970,6 +970,7 @@ MonoBehaviour:
   reel1Symbol: {fileID: 729434793}
   reel2Symbol: {fileID: 19002331}
   reel3Symbol: {fileID: 603215688}
+  winText: {fileID: 626270944}
 --- !u!4 &625296741
 Transform:
   m_ObjectHideFlags: 0
