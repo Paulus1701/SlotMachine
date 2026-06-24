@@ -3,10 +3,8 @@ using TMPro;
 
 public class GameController : MonoBehaviour
 {
-    //Verweis für die Symbol-Texte der drei Walzen (im Inspector zugewiesen)
-    [SerializeField] private TMP_Text reel1Symbol;
-    [SerializeField] private TMP_Text reel2Symbol;
-    [SerializeField] private TMP_Text reel3Symbol;
+    // Verweise auf die 9 Symbol-Texte, zeilenweise Reel1..Reel9 (im Inspector zugewiesen)
+    [SerializeField] private TMP_Text[] cells;
     [SerializeField] private TMP_Text winText;
     [SerializeField] private TMP_Text balanceText;
     [SerializeField] private TMP_Text betText;
@@ -32,13 +30,16 @@ public class GameController : MonoBehaviour
             return;
         }
 
-        // Anzeige aktualisieren
-        reel1Symbol.text = result.Symbols[0]; // s1
-        reel2Symbol.text = result.Symbols[1]; // s2
-        reel3Symbol.text = result.Symbols[2]; // s3 
+        // Anzeige aktualisieren: alle 9 Symbole in die 9 Zellen schreiben
+        for (int i = 0; i < cells.Length; i++)
+        {
+            cells[i].text = result.Grid[i];
+        }
 
         // Gewinnprüfung-Ergebnis anzeigen
-        winText.text = result.IsWin ? "GEWINN! +" + result.Payout : "Kein Gewinn";
+        winText.text = result.WinningLines > 0
+            ? "GEWINN! " + result.WinningLines + " Linie(n) +" + result.Payout
+            : "Kein Gewinn";
 
         UpdateUI(); // Anzeigen aktualisieren
     }
