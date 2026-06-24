@@ -971,6 +971,8 @@ MonoBehaviour:
   reel2Symbol: {fileID: 19002331}
   reel3Symbol: {fileID: 603215688}
   winText: {fileID: 626270944}
+  balanceText: {fileID: 1438410481}
+  betText: {fileID: 1772370491}
 --- !u!4 &625296741
 Transform:
   m_ObjectHideFlags: 0
