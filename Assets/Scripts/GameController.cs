@@ -8,6 +8,7 @@ public class GameController : MonoBehaviour
     [SerializeField] private TMP_Text winText;
     [SerializeField] private TMP_Text balanceText;
     [SerializeField] private TMP_Text betText;
+    [SerializeField] private TMP_Text paytableText;
 
     // Die Spiel-Logik (kennt Unity nicht)
     private SlotEngine engine = new SlotEngine();
@@ -16,6 +17,8 @@ public class GameController : MonoBehaviour
     void Start()
     {
         UpdateUI();
+        ShowPaytable();
+        
     }
 
     // Wird aufgerufen, wenn der SPIN-Button geklickt wird
@@ -42,6 +45,17 @@ public class GameController : MonoBehaviour
             : "Kein Gewinn";
 
         UpdateUI(); // Anzeigen aktualisieren
+    }
+    
+    // Baut die Gewinntabelle aus der Paytable der Engine (eine Quelle)
+    private void ShowPaytable()
+    {
+        string text = "GEWINNTABELLE\n";
+        foreach (Symbol s in engine.GetPaytable())
+        {
+            text += s.Name + "  x" + s.Multiplier + "\n";
+        }
+        paytableText.text = text;
     }
 
     // Schreibt Guthaben und Einsatz in die Anzeigen

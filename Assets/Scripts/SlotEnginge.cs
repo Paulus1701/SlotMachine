@@ -62,6 +62,12 @@ public class SlotEngine
         }
         return paytable[paytable.Length - 1]; // Sicherheits-Fallback
     }
+    
+    // Gibt die Paytable nach außen, damit die UI sie anzeigen kann
+    public Symbol[] GetPaytable()
+    {
+        return paytable;
+    }
 
     public SpinResult Spin()
     {
