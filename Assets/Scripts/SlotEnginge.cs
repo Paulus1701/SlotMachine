@@ -2,13 +2,20 @@ public class SlotEngine
 {
     // SlotEngine rechnet nur und gibt "Zettel / Infos" zurück, ohne irgendeinen Text anzuzeigen
 
-    // Die möglichen Symbole einer Walze
-    private string[] symbols = { "7", "$", "X", "A", "K" };
+    // Die Paytable: jedes Symbol mit Häufigkeit (Weight) und Multiplikator. Selten = hoher Multiplikator.
+    private Symbol[] paytable = new Symbol[]
+    {
+        new Symbol("7", 1, 50), // selten, zahlt am meisten
+        new Symbol("$", 2, 20),
+        new Symbol("X", 3, 10),
+        new Symbol("A", 4, 5),
+        new Symbol("K", 5, 2),  // häufig, zahlt am wenigsten
+    };
+
     private System.Random random = new System.Random();
-    private int winMultiplier = 10; // Auszahlung = Einsatz * Multiplier
 
     // Guthaben und Einsatz: von außen lesbar, nur intern änderbar
-    public int Balance { get; private set; } = 1000; // aktuelles Guthaben; Von außen sieht sie aus wie ein Feld, aber sie steuert den Zugriff: get; heißt „jeder darf sie lesen", private set; heißt „nur diese Klasse darf sie ändern", = 1000 ist der Startwert.
+    public int Balance { get; private set; } = 1000; // aktuelles Guthaben
     public int Bet { get; private set; } = 10;       // Einsatz pro Dreh
 
     // 5 Paylines als Index-Tripel (Index = Reihe*3 + Spalte, zeilenweise)
@@ -27,7 +34,33 @@ public class SlotEngine
         public string[] Grid;      // 9 Symbole, zeilenweise
         public int WinningLines;   // wie viele Linien gewonnen haben
         public int Payout;
-        public bool Played; // false, wenn zu wenig Guthaben
+        public bool Played;        // false, wenn zu wenig Guthaben
+    }
+
+    // Wählt ein Symbol gewichtet aus: höheres Weight = häufiger
+    // Zieht ein zufälliges Los aus dem Topf und gibt das Symbol zurück, dem dieses Los gehört
+    private Symbol PickRandomSymbol()
+    {
+        // Alle Gewichte zusammenzählen (hier 1+2+3+4+5 = 15)
+        int totalWeight = 0;
+        foreach (Symbol s in paytable) totalWeight += s.Weight;
+
+        // Eine Zahl 0..totalWeight-1 ziehen
+        int roll = random.Next(totalWeight);
+
+        // Durchlaufen, bis roll in den Bereich eines Symbols fällt
+        int cumulative = 0;
+        /*
+         * roll ist eine zufällige Zahl von 0 bis 14.
+         * cumulative erhöht sich in jedem Durchlauf der foreach Schleife um das Gewicht des jeweiligen Symbols (fängt an mit weight = +1 und geht zum Schluss bis weight = +5)
+         * Wenn man Symbol 7 haben möchte, muss man muss roll = 0 bekommen, weil wenn man Symbol 7 bekommt, dann ist cumulative = 1 und das einzige, was kleiner ist als 1 ist 0, weshalb es eine Chance von 1/15 hat, weil roll mit 14/15 eine Zahl von 1-14 generiert hätte.
+         */
+        foreach (Symbol s in paytable)
+        {
+            cumulative += s.Weight;
+            if (roll < cumulative) return s;
+        }
+        return paytable[paytable.Length - 1]; // Sicherheits-Fallback
     }
 
     public SpinResult Spin()
@@ -44,31 +77,38 @@ public class SlotEngine
         result.Played = true;
         Balance -= Bet; // Einsatz von Balance abziehen
 
-        // 9 Zufallssymbole erzeugen (zeilenweise)
-        string[] grid = new string[9];
+        // 9 Symbole gewichtet ziehen
+        Symbol[] grid = new Symbol[9];
         for (int i = 0; i < 9; i++)
         {
-            grid[i] = symbols[random.Next(symbols.Length)];
+            grid[i] = PickRandomSymbol();
         }
-        result.Grid = grid;
 
-        // Jede Payline prüfen, ob die drei Symbole gleich sind
+        // Namen fürs Anzeigen in den Zettel schreiben
+        result.Grid = new string[9];
+        for (int i = 0; i < 9; i++)
+        {
+            result.Grid[i] = grid[i].Name;
+        }
+
+        // Jede Payline prüfen; Auszahlung nach Multiplikator des Symbols
         int winningLines = 0;
+        int totalPayout = 0;
         foreach (int[] line in paylines)
         {
-            if (grid[line[0]] == grid[line[1]] && grid[line[1]] == grid[line[2]]) // Eine Payline ist eine Liste von den 3 Nummern, die oben eingeführt wurden new int[] {0, 1, 2}, // obere Reihe. Jede einzelne von ihnen ist ein Gewinn, wenn die Symbole gleich sind. Es fragt also, "sind die drei Symbole auf dieser Linie gleich?" und das für jeder der 5 Linien
+            Symbol a = grid[line[0]];
+            Symbol b = grid[line[1]];
+            Symbol c = grid[line[2]];
+            if (a.Name == b.Name && b.Name == c.Name)
             {
                 winningLines++;
+                totalPayout += Bet * a.Multiplier; // Multiplikator dieses Symbols
             }
         }
-        result.WinningLines = winningLines;
 
-        // Auszahlung: pro Gewinnlinie Einsatz * Multiplikator
-        if (winningLines > 0)
-        {
-            result.Payout = winningLines * Bet * winMultiplier;
-            Balance += result.Payout;
-        }
+        result.WinningLines = winningLines;
+        result.Payout = totalPayout;
+        Balance += totalPayout;
 
         return result;
     }
