@@ -1,5 +1,6 @@
 using UnityEngine;
 using TMPro;
+using System.Collections;
 
 public class GameController : MonoBehaviour
 {
@@ -13,40 +14,76 @@ public class GameController : MonoBehaviour
     // Die Spiel-Logik (kennt Unity nicht)
     private SlotEngine engine = new SlotEngine();
 
+    // true, während die Walzen drehen (verhindert Doppel-Klicks)
+    private bool isSpinning = false;
+
     // Läuft einmal beim Start, setzt die Anzeigen auf die Startwerte
     void Start()
     {
         UpdateUI();
         ShowPaytable();
-        
     }
 
     // Wird aufgerufen, wenn der SPIN-Button geklickt wird
     public void Spin()
     {
-        SlotEngine.SpinResult result = engine.Spin(); // Operator sagt der Engine "dreh!"
+        if (isSpinning) return;          // läuft schon ein Dreh? dann nichts tun
+        StartCoroutine(SpinRoutine());   // die Animation starten
+    }
+
+    // Der zeitliche Ablauf eines Drehs (Coroutine)
+    private IEnumerator SpinRoutine()
+    {
+        SlotEngine.SpinResult result = engine.Spin(); // Ergebnis steht sofort fest
 
         // Check, ob genug Guthaben für Einsatz da war
         if (!result.Played)
         {
             winText.text = "Nicht genug Guthaben!";
-            return;
+            yield break;                 // Coroutine sofort beenden
         }
 
-        // Anzeige aktualisieren: alle 9 Symbole in die 9 Zellen schreiben
+        isSpinning = true;
+        winText.text = "";               // alte Meldung weg
+        UpdateUI();                      // Einsatz wurde abgezogen -> Guthaben sofort zeigen
+
+        // Walzen rattern lassen: ca. 1 Sekunde lang alle 0,05s zufällige Symbole
+        float elapsed = 0f;
+        while (elapsed < 1f)
+        {
+            for (int i = 0; i < cells.Length; i++)
+            {
+                cells[i].text = RandomSymbolName();
+            }
+            yield return new WaitForSeconds(0.05f); // hier 0,05s pausieren, dann weiter
+            elapsed += 0.05f;
+        }
+
+        // Endergebnis anzeigen
         for (int i = 0; i < cells.Length; i++)
         {
             cells[i].text = result.Grid[i];
         }
 
         // Gewinnprüfung-Ergebnis anzeigen
+        // Gewinnprüfung-Ergebnis anzeigen
+        string lineWord = result.WinningLines == 1 ? "Linie" : "Linien";
         winText.text = result.WinningLines > 0
-            ? "GEWINN! " + result.WinningLines + " Linie(n) +" + result.Payout
+            ? "GEWINN! " + result.WinningLines + " " + lineWord + " +" + result.Payout
             : "Kein Gewinn";
-
-        UpdateUI(); // Anzeigen aktualisieren
+        
+        engine.Collect(result.Payout); // Gewinn erst JETZT gutschreiben
+        UpdateUI();                    // Guthaben jetzt mit Gewinn anzeigen
+        isSpinning = false;
     }
-    
+
+    // Ein zufälliges Symbol nur für die Dreh-Animation
+    private string RandomSymbolName()
+    {
+        Symbol[] pt = engine.GetPaytable();
+        return pt[Random.Range(0, pt.Length)].Name;
+    }
+
     // Baut die Gewinntabelle aus der Paytable der Engine (eine Quelle)
     private void ShowPaytable()
     {

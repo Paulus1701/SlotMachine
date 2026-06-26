@@ -68,6 +68,12 @@ public class SlotEngine
     {
         return paytable;
     }
+    
+    // Schreibt den Gewinn dem Guthaben gut (von der UI nach der Animation aufgerufen)
+    public void Collect(int payout)
+    {
+        Balance += payout;
+    }
 
     public SpinResult Spin()
     {
@@ -114,7 +120,7 @@ public class SlotEngine
 
         result.WinningLines = winningLines;
         result.Payout = totalPayout;
-        Balance += totalPayout;
+        // Gewinn wird NICHT sofort gutgeschrieben, sondern erst nach der Animation (Collect); Davor wurde Balance direkt geändert und noch vor Ende der Walzenanimation angezeigt.
 
         return result;
     }
