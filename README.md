@@ -47,3 +47,8 @@ Play in the browser via the link above, or:
 - Winning-line highlight
 - Gamble / risk-ladder feature
 - Autospin, sound & polish
+
+## Credits
+
+- Background image: designed by [Freepik - Magnific.com](https://www.magnific.com)
+- Font: [Bungee Inline](https://fonts.google.com/specimen/Bungee+Inline) (SIL Open Font License)
