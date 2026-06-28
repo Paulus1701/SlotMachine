@@ -74,6 +74,15 @@ public class SlotEngine
     {
         Balance += payout;
     }
+    
+    // Setzt den Einsatz – aber nur, wenn das Guthaben reicht
+    public void SetBet(int amount)
+    {
+        if (amount <= Balance)
+        {
+            Bet = amount;
+        }
+    }
 
     public SpinResult Spin()
     {

@@ -10,6 +10,7 @@ public class GameController : MonoBehaviour
     [SerializeField] private TMP_Text balanceText;
     [SerializeField] private TMP_Text betText;
     [SerializeField] private TMP_Text paytableText;
+    [SerializeField] private GameObject betPanel;
 
     // Die Spiel-Logik (kennt Unity nicht)
     private SlotEngine engine = new SlotEngine();
@@ -29,6 +30,21 @@ public class GameController : MonoBehaviour
     {
         if (isSpinning) return;          // läuft schon ein Dreh? dann nichts tun
         StartCoroutine(SpinRoutine());   // die Animation starten
+    }
+    
+    // Wird vom Einsatz-Button aufgerufen (Wert im Inspector eingestellt)
+    public void SetBet(int amount)
+    {
+        if (isSpinning) return;   // während eines Drehs nicht ändern
+        engine.SetBet(amount);
+        UpdateUI();               // neue Einsatz-Anzeige
+        betPanel.SetActive(false);// Nach der Auswahl zuklappen 
+    }
+    
+    // Öffnet/schließt die Einsatz-Auswahl
+    public void ToggleBetPanel()
+    {
+        betPanel.SetActive(!betPanel.activeSelf); //Setz das Panel auf das Gegenteil seines jetzigen Zustands; Bei Klick, während es zu ist auf machen und anders rum
     }
 
     // Der zeitliche Ablauf eines Drehs (Coroutine)
